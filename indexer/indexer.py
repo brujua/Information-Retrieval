@@ -3,6 +3,7 @@ from os import listdir
 from os.path import isdir
 from tokenizer.tokenizer import tokenizar
 from tokenizer.tokenizer import sacar_palabras_vacias
+from tokenizer.tokenizer import tokenizar_con_reglas
 
 TERMS_FILE_NAME = "terminos.txt"
 STATS_FILE_NAME = "estadisticas.txt"
@@ -64,7 +65,6 @@ def main(*args):
     largest_term_count = 0
     smallest_token_count = -1
     smallest_term_count = 0
-
     for fileI in files:
         with open(fileI, encoding="utf-8", errors="ignore") as file:
             file_count += 1
@@ -72,7 +72,7 @@ def main(*args):
             file_terms = []
             lines = file.readlines()
             for line in lines:
-                new_tokens = tokenizar(line)
+                new_tokens = tokenizar_con_reglas(line)
                 if remove_empty_words:
                     new_tokens = sacar_palabras_vacias(new_tokens, empty_words)
                 tokens.extend(new_tokens)
