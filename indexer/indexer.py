@@ -1,16 +1,23 @@
 import sys
+import time
+from tqdm import tqdm
 from os import listdir
 from os.path import isdir
+from typing import List
+
 from tokenizer.tokenizer import tokenizar
 from tokenizer.tokenizer import sacar_palabras_vacias
 from tokenizer.tokenizer import tokenizar_con_reglas
+from tokenizer.tokenizer import tokenizar_con_stemming
+
 
 TERMS_FILE_NAME = "terminos.txt"
 STATS_FILE_NAME = "estadisticas.txt"
 FREQ_FILE_NAME = "frecuencias.txt"
+tokenizer_function = tokenizar
 
 
-def get_files(path: str) -> [str]:
+def get_files(path: str) -> List[str]:
     """ recursively finds all the files within a directory and returns their path in a list.
     :param path: the path of the directory to do the search
     :return a list of strings corresponding to the path of each file in the specified path
@@ -31,7 +38,7 @@ def calculate_len_mean(terms: dict) -> float:
         total = 0
         for string in terms.keys():
             total += len(string)
-        return total / len(terms)
+        return total // len(terms)
 
 
 def calculate_single_term_freq(terms: dict) -> int:
@@ -54,7 +61,7 @@ def main(*args):
     if remove_empty_words:
         empty_words_file = args[1]
         with open(empty_words_file, encoding="utf-8") as file:
-            empty_words = tokenizar(file.read())
+            empty_words = tokenizer_function(file.read())
 
     corpus_dir = args[0]
     terms = {}  # in the form of {token: (corpus_freq, document_freq), }
@@ -65,17 +72,17 @@ def main(*args):
     largest_term_count = 0
     smallest_token_count = -1
     smallest_term_count = 0
+    progress_bar = tqdm(total=len(files), unit="file")
     for fileI in files:
         with open(fileI, encoding="utf-8", errors="ignore") as file:
             file_count += 1
             tokens = []
             file_terms = []
-            lines = file.readlines()
-            for line in lines:
-                new_tokens = tokenizar_con_reglas(line)
-                if remove_empty_words:
-                    new_tokens = sacar_palabras_vacias(new_tokens, empty_words)
-                tokens.extend(new_tokens)
+            file_str = file.read()
+            new_tokens = tokenizer_function(file_str)
+            if remove_empty_words:
+                new_tokens = sacar_palabras_vacias(new_tokens, empty_words)
+            tokens.extend(new_tokens)
             for token in tokens:
                 token_count += 1
                 if token not in terms:
@@ -88,6 +95,7 @@ def main(*args):
                     else:
                         file_terms.append(token)
                         terms[token] = corpus_freq + 1, doc_freq + 1
+            progress_bar.update(1)
 
             if len(tokens) > largest_token_count:
                 largest_token_count = len(tokens)
@@ -97,7 +105,7 @@ def main(*args):
                 smallest_term_count = len(file_terms)
 
     ordered_terms = sorted(terms, key=terms.get, reverse=True)
-
+    progress_bar.close()
     # Terms
     with open(TERMS_FILE_NAME, 'w') as terms_file:
         for term in ordered_terms:
@@ -106,8 +114,8 @@ def main(*args):
 
     # Statistics
     term_count = len(terms)
-    token_mean = token_count / file_count
-    term_mean = term_count / file_count
+    token_mean = token_count // file_count
+    term_mean = term_count // file_count
     term_len_mean = calculate_len_mean(terms)
     one_freq_term_count = calculate_single_term_freq(terms)
     with open(STATS_FILE_NAME, "w") as stats_file:

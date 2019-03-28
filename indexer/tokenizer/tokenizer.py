@@ -1,6 +1,12 @@
+from typing import List
+
 import unidecode
 import re
+from nltk.stem import SnowballStemmer
+from nltk.stem.lancaster import LancasterStemmer
+from nltk.stem.porter import PorterStemmer
 
+language = "spanish"
 TERMS_FILE_NAME = "terminos.txt"
 STATS_FILE_NAME = "estadisticas.txt"
 FREQ_FILE_NAME = "frecuencias.txt"
@@ -53,24 +59,33 @@ SPECIAL_CHARS = [
     "\t"
 ]
 
+stemmer_snowball = SnowballStemmer(language)
+stemmer_porter = PorterStemmer()
+stemmer_lancaster = LancasterStemmer()
+stemmers = {
+        "snowball": stemmer_snowball,
+        "porter": stemmer_porter,
+        "lancaster": stemmer_lancaster
+    }
 
-def tokenizar(line: str):
-    line = line.casefold()
+
+def tokenizar(text: str):
+    text = text.casefold()
     for char in SPECIAL_CHARS:
-        line = line.replace(char, SPACE)
-    line = unidecode.unidecode(line)  # remove accents
-    line = re.sub(NUMBER_REGEX, SPACE, line)  # remove numbers
-    return [token for token in line.split() if TOKEN_MIN_LEN <= len(token) <= TOKEN_MAX_LEN]
+        text = text.replace(char, SPACE)
+    text = unidecode.unidecode(text)  # remove accents
+    text = re.sub(NUMBER_REGEX, SPACE, text)  # remove numbers
+    return [token for token in text.split() if TOKEN_MIN_LEN <= len(token) <= TOKEN_MAX_LEN]
 
 
-def tokenizar_con_reglas(line: str) -> [str]:
+def tokenizar_con_reglas(text: str) -> List[str]:
     tokens = []
-    abreviaturas = get_abreviaturas(line)
-    mails_y_urls = get_mails_and_urls(line)
-    numeros = get_numeros(line)
-    nombres = get_names(line)
+    abreviaturas = get_abreviaturas(text)
+    mails_y_urls = get_mails_and_urls(text)
+    numeros = get_numeros(text)
+    nombres = get_names(text)
 
-    tokens.extend(tokenizar(line))
+    tokens.extend(tokenizar(text))
     tokens.extend(abreviaturas)
     tokens.extend(mails_y_urls)
     tokens.extend(numeros)
@@ -78,33 +93,46 @@ def tokenizar_con_reglas(line: str) -> [str]:
     return tokens
 
 
-def sacar_palabras_vacias(lista_tokens: [str], lista_vacias: [str]):
+def tokenizar_con_stemming(text: str, stemm_algorithm: str = "snowball") -> List[str]:
+    """
+    Returns the list of tokens contained in the provided text, using the stemmer specified
+    :param text: string to tokenize
+    :param stemm_algorithm: string with possible values "snowball", "porter", "lancaster".
+    :return:
+    """
+    stemmer = stemmers.get(stemm_algorithm, stemmer_lancaster)
+    return [stemmer.stem(token) for token in tokenizar(text)]
+
+
+def sacar_palabras_vacias(lista_tokens: List[str], lista_vacias: List[str]):
     return [token for token in lista_tokens if token not in lista_vacias]
 
 
-def get_abreviaturas(string: str) -> [str]:
-    return extract_by_rule(string, ACRONYMS_ABBREVIATIONS_REGEX)
+def get_abreviaturas(string: str) -> List[str]:
+    return _extract_by_rule(string, ACRONYMS_ABBREVIATIONS_REGEX)
 
 
-def get_mails_and_urls(string: str) -> [str]:
-    tokens = extract_by_rule(string, MAIL_REGEX)
-    tokens.extend(extract_by_rule(string, URL_REGEX))
+def get_mails_and_urls(string: str) -> List[str]:
+    with open("urls", "a") as file:
+        for strurl in _extract_by_rule(string, URL_REGEX):
+            file.write(strurl + "\n")
+    tokens = _extract_by_rule(string, MAIL_REGEX)
+    tokens.extend(_extract_by_rule(string, URL_REGEX))
     return tokens
 
 
-def get_names(string: str) -> [str]:
-    return extract_by_rule(string, NAME_REGEX)
+def get_names(string: str) -> List[str]:
+    return _extract_by_rule(string, NAME_REGEX)
 
 
-def get_numeros(string: str) -> [str]:
-    return extract_by_rule(string, NUMBER_REGEX)
+def get_numeros(string: str) -> List[str]:
+    return _extract_by_rule(string, NUMBER_REGEX)
 
 
-def extract_by_rule(string: str, rule: str) -> [str]:
+def _extract_by_rule(string: str, rule: str) -> List[str]:
     tokens = []
     for match in re.finditer(rule, string):
         token = match.group(0)
         if TOKEN_MIN_LEN <= len(token) <= TOKEN_MAX_LEN:
             tokens.append(token)
     return tokens
-
