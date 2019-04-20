@@ -107,7 +107,8 @@ def get_documents_vectors(query_terms: List[str]) -> Dict:
 
 
 def calculate_similitude(query_vector: List[float], doc_vector: List[float]):
-    return np.dot(query_vector, doc_vector)
+    #  Angle between vectors = D . Q / |D| * |Q|
+    return np.dot(query_vector, doc_vector) / (np.linalg.norm(query_vector) * np.linalg.norm(doc_vector))
 
 
 def calculate_idfs():
@@ -123,4 +124,5 @@ def get_empty_words(file_name: str):
 if __name__ == '__main__':
     if len(sys.argv) is not 3:
         print(ERROR_ARGS)
-    main(*sys.argv[1:])
+    else:
+        main(*sys.argv[1:])
