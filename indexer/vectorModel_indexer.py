@@ -13,7 +13,8 @@ from tokenizer.tokenizer import sacar_palabras_vacias
 from utils import get_files
 
 ERROR_ARGS = "Invalid Arguments. \nUsage: python " + sys.argv[0] + " <corpus-dir> <stop-words-file>"
-
+EXIT_QUERY = "--exit"
+MAX_RESULTS = 10
 corpus_terms = {}
 documents = {}
 
@@ -22,12 +23,15 @@ def main(*args):
     empty_words = get_empty_words(args[1])
     files = get_files(args[0])
     index(files, empty_words)
-    print("Query please: ")
-    query = input()
-    result_docs = resolve_query(query, empty_words)
-    print("Documents: ")
-    for doc in result_docs:
-        print(doc.file_name)
+    while True:
+        print("Enter Query: (or type", EXIT_QUERY, " )")
+        query = input()
+        if query == EXIT_QUERY:
+            break
+        result_docs = resolve_query(query, empty_words)
+        print("Documents: ")
+        for doc in result_docs[:MAX_RESULTS]:
+            print(doc.file_name)
 
 
 def index(files: List[str], empty_words: List[str]):
@@ -37,7 +41,6 @@ def index(files: List[str], empty_words: List[str]):
         doc = Document(file_name, {}, uuid.uuid4())
         documents[file_name] = doc
         with open(file_name, encoding="utf-8", errors="ignore") as file:
-            progress_bar.update(1)
             tokens = tokenizar(file.read())
             tokens = sacar_palabras_vacias(tokens, empty_words)
             for token in tokens:
@@ -48,10 +51,10 @@ def index(files: List[str], empty_words: List[str]):
                     corpus_terms[token] = term
                 doc.has_term(term)
                 term.found_in(doc)
+        progress_bar.update(1)
 
-    progress_bar.close()
-    print("Calculating idfs...")
     calculate_idfs()
+    progress_bar.close()
 
 
 def resolve_query(query: str, empty_words: List[str]) -> List[Document]:
