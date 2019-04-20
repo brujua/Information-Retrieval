@@ -22,7 +22,7 @@ NAME_REGEX = r"[A-Z][a-záéóúí]+( [A-Z][a-záéóúí]+)+"
 SPECIAL_CHARS = [
     ".",
     "!",
-    "=",
+    "="
     "+",
     "-",
     "/",
@@ -113,9 +113,6 @@ def get_abreviaturas(string: str) -> List[str]:
 
 
 def get_mails_and_urls(string: str) -> List[str]:
-    with open("urls", "a") as file:
-        for strurl in _extract_by_rule(string, URL_REGEX):
-            file.write(strurl + "\n")
     tokens = _extract_by_rule(string, MAIL_REGEX)
     tokens.extend(_extract_by_rule(string, URL_REGEX))
     return tokens

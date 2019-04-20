@@ -1,15 +1,13 @@
 import sys
-import time
+import uuid
 from tqdm import tqdm
-from os import listdir
-from os.path import isdir
-from typing import List
+from utils import get_files
+from typing import List, Callable
 
 from tokenizer.tokenizer import tokenizar
 from tokenizer.tokenizer import sacar_palabras_vacias
 from tokenizer.tokenizer import tokenizar_con_reglas
 from tokenizer.tokenizer import tokenizar_con_stemming
-
 
 TERMS_FILE_NAME = "terminos.txt"
 STATS_FILE_NAME = "estadisticas.txt"
@@ -17,22 +15,10 @@ FREQ_FILE_NAME = "frecuencias.txt"
 tokenizer_function = tokenizar
 
 
-def get_files(path: str) -> List[str]:
-    """ recursively finds all the files within a directory and returns their path in a list.
-    :param path: the path of the directory to do the search
-    :return a list of strings corresponding to the path of each file in the specified path
-    """
-    if not isdir(path):
-        return [path]  # its expected to return a list each time even if its a single element
-    return [file for fileOrDir in listdir(path) for file in get_files(path + '/' + fileOrDir)]
-    # return list of each file returned by the recursive call getFiles(fileOrDir) on
-    # each fileOrDir in listdir(path)
-
-
-def calculate_len_mean(terms: dict) -> float:
+def get_len_mean(terms: dict) -> int:
     """
     :param terms: dictionary with the form of {'term' : (corpus_f, doc_f), ..}
-    :return: the mean of the length of the terms in the dictionary
+    :return: the integer mean of the length of the terms in the dictionary
     """
     if len(terms) > 0:
         total = 0
@@ -41,7 +27,7 @@ def calculate_len_mean(terms: dict) -> float:
         return total // len(terms)
 
 
-def calculate_single_term_freq(terms: dict) -> int:
+def get_single_term_freq(terms: dict) -> int:
     """
     Calculates the number of terms with their corpus frequency in 1
     :param terms: dictionary with the form of {'term' : (corpus_f, doc_f), ..}
@@ -53,6 +39,16 @@ def calculate_single_term_freq(terms: dict) -> int:
         if corpus_freq == 1:
             count += 1
     return count
+
+
+def enable_rule_based_tokenization():
+    global tokenizer_function
+    tokenizer_function = tokenizar_con_reglas
+
+
+def enable_stemmed_tokenization():
+    global tokenizer_function
+    tokenizer_function = tokenizar_con_stemming
 
 
 def main(*args):
@@ -116,8 +112,8 @@ def main(*args):
     term_count = len(terms)
     token_mean = token_count // file_count
     term_mean = term_count // file_count
-    term_len_mean = calculate_len_mean(terms)
-    one_freq_term_count = calculate_single_term_freq(terms)
+    term_len_mean = get_len_mean(terms)
+    one_freq_term_count = get_single_term_freq(terms)
     with open(STATS_FILE_NAME, "w") as stats_file:
         stats_file.write(str(file_count) + "\n")
         stats_file.write(str(token_count) + "\t" + str(term_count) + "\n")
@@ -129,7 +125,7 @@ def main(*args):
 
     # 10 most and least frequent terms
     most_freq = ordered_terms[0:10]
-    least_freq = ordered_terms[term_count-10:term_count]
+    least_freq = ordered_terms[term_count - 10:term_count]
     with open(FREQ_FILE_NAME, "w") as freq_file:
         for term in most_freq:
             corpus_freq, __ = terms[term]

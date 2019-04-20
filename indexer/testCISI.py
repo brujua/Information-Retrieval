@@ -22,8 +22,6 @@ if remove_empty_words:
         empty_words_porter = tokenizar_con_stemming(file.read(), stemm_algorithm="porter")
     with open(empty_words_file, "r", encoding="utf-8") as file:
         empty_words_lancaster = tokenizar_con_stemming(file.read(), stemm_algorithm="lancaster")
-    print(empty_words_porter)
-    print(empty_words_lancaster)
 with open(FILE_PATH, "r", encoding="utf-8") as file:
     tokens_porter = []
     tokens_lancaster = []
@@ -31,7 +29,7 @@ with open(FILE_PATH, "r", encoding="utf-8") as file:
     terms_lancaster = {}
     tokenize = False
     lines = file.readlines()
-    progress_bar = tqdm(total=len(lines))
+    progress_bar = tqdm(total=len(lines), unit="line")
     for line in lines:
         if line.find(DATA_START) == 0:
             tokenize = True
@@ -63,6 +61,12 @@ with open(FILE_PATH, "r", encoding="utf-8") as file:
     with open("lancaster-terms", "w") as porter_terms_file:
         for token in lancaster_ordered:
             porter_terms_file.write(token + "\t" + str(terms_lancaster[token]) + "\n")
+
+    lancaster_1_terms = [term for term, value in terms_lancaster.items() if value < 4]
+    porter_1_terms = [term for term, value in terms_porter.items() if value < 4]
+    with open("Lancaster-Porter-stats.txt", "w") as stats_file:
+        stats_file.write("Lancaster: " + str(len(lancaster_1_terms)) + "\n")
+        stats_file.write("Porter: " + str(len(porter_1_terms)))
 
     print(" Tokens count: " + str(tokens_lancaster_count))
     print("Lancaster terms: " + str(len(terms_lancaster)))

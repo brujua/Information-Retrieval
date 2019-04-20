@@ -9,6 +9,8 @@ verify_ssl = true
 unidecode = "*"
 nltk = "*"
 tqdm = "*"
+numpy = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.7"
