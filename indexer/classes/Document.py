@@ -12,10 +12,8 @@ class Document:
     id: uuid.UUID
 
     def has_term(self, term: Term):
-        if term not in self.terms:
-            self.terms[term] = 1
-        else:
-            self.terms[term] += 1
+        term_freq = self.terms.get(term, 0)
+        self.terms[term] = term_freq + 1
 
     def get_freq(self, term: Term):
         return self.terms.get(term, 0)
