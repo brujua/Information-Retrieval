@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass
-from typing import Set, Dict
+from typing import Set,  Dict
 
 from classes import Term
 
@@ -22,9 +22,6 @@ class Document:
         if term not in self.terms:
             return 0
         return self.terms[term] * term.get_idf()
-
-    def __repr__(self):
-        return self.__str__()
 
     def __str__(self):
         return "[" + self.file_name + " {" + self.terms.__str__() + "}]"

@@ -44,11 +44,8 @@ def index(files: List[str], empty_words: List[str]):
             tokens = tokenizar(file.read())
             tokens = sacar_palabras_vacias(tokens, empty_words)
             for token in tokens:
-                if token in corpus_terms:
-                    term = corpus_terms.get(token)
-                else:
-                    term = Term(token, [], uuid.uuid4())
-                    corpus_terms[token] = term
+                term = corpus_terms.get(token, Term(token, set(), uuid.uuid4()))
+                corpus_terms[token] = term
                 doc.has_term(term)
                 term.found_in(doc)
         progress_bar.update(1)

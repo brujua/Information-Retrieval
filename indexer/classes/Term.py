@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass
-from typing import List
+from typing import Set, List
 
 from classes import Document
 
@@ -8,7 +8,7 @@ from classes import Document
 @dataclass
 class Term:
     name: str
-    documents: List
+    documents: Set
     id: uuid.UUID
     corpus_freq: int = 0
     doc_freq: int = 0
@@ -16,7 +16,7 @@ class Term:
 
     def found_in(self, doc: Document):
         if doc not in self.documents:
-            self.documents.append(doc)
+            self.documents.add(doc)
             self.doc_freq += 1
         self.corpus_freq += 1
 
