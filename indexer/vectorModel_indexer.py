@@ -6,6 +6,7 @@ from tqdm import tqdm
 from typing import List, Callable, Dict
 from math import log2
 
+
 from classes.Document import Document
 from classes.Term import Term
 from tokenizer.tokenizer import tokenizar
@@ -38,16 +39,16 @@ def index(files: List[str], empty_words: List[str]):
     print("indexing...")
     progress_bar = tqdm(total=len(files), unit="file")
     for file_name in files:
-        doc = Document(file_name, {}, uuid.uuid4())
+        doc = Document(file_name, {}, len(documents))
         documents[file_name] = doc
         with open(file_name, encoding="utf-8", errors="ignore") as file:
             tokens = tokenizar(file.read())
-            tokens = sacar_palabras_vacias(tokens, empty_words)
-            for token in tokens:
-                term = corpus_terms.get(token, Term(token, set(), uuid.uuid4()))
-                corpus_terms[token] = term
-                doc.has_term(term)
-                term.found_in(doc)
+        tokens = sacar_palabras_vacias(tokens, empty_words)
+        for token in tokens:
+            term = corpus_terms.get(token, Term(token, set(), len(corpus_terms)))
+            corpus_terms[token] = term
+            doc.has_term(term)
+            term.found_in(doc)
         progress_bar.update(1)
 
     calculate_idfs()

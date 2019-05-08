@@ -9,7 +9,7 @@ from classes import Document
 class Term:
     name: str
     documents: Set
-    id: uuid.UUID
+    id: int
     corpus_freq: int = 0
     doc_freq: int = 0
     idf: float = -1
@@ -33,4 +33,4 @@ class Term:
         return self.__str__()
 
     def __hash__(self):
-        return id.__hash__()
+        return self.id

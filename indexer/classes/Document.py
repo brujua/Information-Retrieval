@@ -9,7 +9,7 @@ from classes import Term
 class Document:
     file_name: str
     terms: Dict
-    id: uuid.UUID
+    id: int
 
     def has_term(self, term: Term):
         term_freq = self.terms.get(term, 0)
@@ -27,4 +27,4 @@ class Document:
         return "[" + self.file_name + " {" + self.terms.__str__() + "}]"
 
     def __hash__(self):
-        return id.__hash__()
+        return self.id
